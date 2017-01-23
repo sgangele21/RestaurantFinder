@@ -11,17 +11,17 @@ import UIKit
 class ViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var nameTextField: UITextField!
-    enum Error: ErrorType {
-        case NoName
+    
+    enum TextFieldError: Error {
+        case noName
     }
 
     @IBOutlet weak var textFieldBottomConstraint: NSLayoutConstraint!
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.keyboardWillShow), name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.keyboardWillHide), name: UIKeyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.keyboardWillShow), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.keyboardWillHide), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
     }
 
     override func didReceiveMemoryWarning() {
@@ -29,59 +29,59 @@ class ViewController: UIViewController, UITextFieldDelegate {
         // Dispose of any resources that can be recreated.
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         do {
             if segue.identifier == "startAdventure" {
-                if let pageController = segue.destinationViewController as? PageController {
+                if let pageController = segue.destination as? PageController {
                     pageController.page = Adventure.story("Sahil")
                 }
             if let name = nameTextField.text {
                 if name == "" {
-                    throw Error.NoName
+                    throw TextFieldError.noName
                     }
                 }
             }
             
-        }catch Error.NoName {
-            let alert = UIAlertController(title: "Name Not Entered", message: "You must enter a name", preferredStyle: .Alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
-            presentViewController(alert, animated: true, completion: nil)
+        }catch TextFieldError.noName {
+            let alert = UIAlertController(title: "Name Not Entered", message: "You must enter a name", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            present(alert, animated: true, completion: nil)
             
         }catch let error {
             fatalError("\(error)")
         }
     }
     
-    func keyboardWillShow(notification: NSNotification) {
+    func keyboardWillShow(_ notification: Notification) {
         
-        if let userInfoDict = notification.userInfo, keyboardFrameValue = userInfoDict[UIKeyboardFrameEndUserInfoKey] as? NSValue {
-            let keyboardFrame = keyboardFrameValue.CGRectValue()
+        if let userInfoDict = notification.userInfo, let keyboardFrameValue = userInfoDict[UIKeyboardFrameEndUserInfoKey] as? NSValue {
+            let keyboardFrame = keyboardFrameValue.cgRectValue
             
-            UIView.animateWithDuration(10.0) {
+            UIView.animate(withDuration: 10.0, animations: {
                 self.textFieldBottomConstraint.constant = keyboardFrame.height + 10
                 self.view.layoutIfNeeded()
-            }
+            }) 
             
         }
     }
     
-    func keyboardWillHide(notification: NSNotification) {
-        if let userInfoDict = notification.userInfo, keyboardFrameValue = userInfoDict[UIKeyboardFrameEndUserInfoKey] as? NSValue {
-            let keyboardFrame = keyboardFrameValue.CGRectValue()
+    func keyboardWillHide(_ notification: Notification) {
+        if let userInfoDict = notification.userInfo, let keyboardFrameValue = userInfoDict[UIKeyboardFrameEndUserInfoKey] as? NSValue {
+            let keyboardFrame = keyboardFrameValue.cgRectValue
             
-            UIView.animateWithDuration(1.0) {
+            UIView.animate(withDuration: 1.0, animations: {
                 self.textFieldBottomConstraint.constant = 40.0
                 self.view.layoutIfNeeded()
-            }
+            }) 
             
         }
     }
     
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
     }
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
